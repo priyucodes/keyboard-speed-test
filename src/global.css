@@ -30,3 +30,11 @@ body {
 h1 {
   font-size: 3rem;
 }
+
+.success {
+  background: green;
+}
+
+.danger {
+  background: red;
+}

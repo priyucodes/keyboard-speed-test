@@ -2,12 +2,14 @@ import { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import randomWords from 'random-words';
 const NUMOFWORDS = 200;
-const SECONDS = 3;
+const SECONDS = 60;
 function App() {
   const [words, setWords] = useState([]);
   const [input, setInput] = useState('');
   const [timer, setTimer] = useState(SECONDS);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [currCharIndex, setCurrCharIndex] = useState(-1);
+  const [currentChar, setCurrentChar] = useState([]);
   const [isCorrect, setIsCorrect] = useState(0);
   const [isIncorrect, setIsIncorrect] = useState(0);
   const [status, setStatus] = useState('Wating...');
@@ -30,6 +32,8 @@ function App() {
       setCurrentWordIndex(0);
       setIsCorrect(0);
       setIsIncorrect(0);
+      setCurrCharIndex(-1);
+      setCurrentChar('');
     }
     if (status !== 'started') {
       setStatus('started');
@@ -47,12 +51,20 @@ function App() {
       }, 1 * 1000);
     }
   };
-  const keyDownHandler = ({ keyCode }) => {
+  const keyDownHandler = ({ keyCode, key }) => {
     // 32- spacebar
     if (keyCode === 32 || keyCode === 13) {
       checkMatch();
       setInput('');
       setCurrentWordIndex(prevState => prevState + 1);
+      setCurrCharIndex(-1);
+      // backspace
+    } else if (keyCode === 8) {
+      setCurrCharIndex(prevState => prevState - 1);
+      setCurrentChar('');
+    } else {
+      setCurrCharIndex(prevState => prevState + 1);
+      setCurrentChar(key);
     }
   };
 
@@ -61,7 +73,31 @@ function App() {
     const isMatched = wordToCompare === input.trim();
     if (isMatched) {
       setIsCorrect(prevState => prevState + 1);
-    } else setIsIncorrect(prevState => prevState + 1);
+    } else {
+      setIsIncorrect(prevState => prevState + 1);
+    }
+  };
+  const getCharClass = (wordIdx, charIdx, char) => {
+    if (
+      wordIdx === currentWordIndex &&
+      charIdx === currCharIndex &&
+      currentChar &&
+      status !== 'finished'
+    ) {
+      console.log(char, currentChar, charIdx);
+      if (char === currentChar) {
+        return 'success';
+      } else {
+        return 'danger';
+      }
+    } else if (
+      wordIdx === currentWordIndex &&
+      currCharIndex >= words[currentWordIndex].length
+    ) {
+      return 'danger';
+    } else {
+      return '';
+    }
   };
   return (
     <Container>
@@ -74,8 +110,10 @@ function App() {
           {words.map((word, i) => (
             <span key={i}>
               <span>
-                {word.split(' ').map((char, idx) => (
-                  <span key={idx}>{char}</span>
+                {word.split('').map((char, idx) => (
+                  <span className={getCharClass(i, idx, char)} key={idx}>
+                    {char}
+                  </span>
                 ))}
               </span>
               <span> </span>
